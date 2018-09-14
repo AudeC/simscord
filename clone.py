@@ -12,8 +12,8 @@ class Friend:
         self.greeted = False
         self.howru = False
 
-    def getUser(self):
-        return self.user
+    def user(self):
+        return user
 
     def howruDone(self):
         self.howru = True
@@ -93,4 +93,4 @@ async def on_ready():
     # jeu
     await client.change_presence(game=discord.Game(name="Phase de test"))
 
-client.run(TOKEN)
+client.run(TOKEN2)
