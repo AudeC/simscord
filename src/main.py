@@ -24,8 +24,8 @@ class Bot:
         self.age = b[4]
 
 class Conversation(Thread):
-    # interlocutor : objet de type Bot
 
+    # interlocutor : objet de type Bot
     def __init__(self, interlocutor):
         Thread.__init__(self)
         self.interlocutor = interlocutor
@@ -44,6 +44,9 @@ async def say(channel, msg):
     time.sleep(random.choice((1, 2, 3, 4)))
     await client.send_message(channel, msg)
 
+def interpret(msg):
+    expr = db.findExpr(msg)
+    return expr
 
 @client.event
 async def on_message(message):
@@ -69,8 +72,12 @@ async def on_message(message):
         # Bot reconnu
         print(bot)
         test = Bot(message.author.id)
-        await say(message.channel, "Je te connais, "+test.name+" !")
-
+        #await say(message.channel, "Je te connais, "+test.name+" !")
+        e = interpret(message.content)
+        if e is False:
+            await say(message.channel, "Je n'ai rien compris.")
+        else: 
+            await say(message.channel, test.name+", tu m'as dit "+e[1])
 
 @client.event
 async def on_ready():
