@@ -74,10 +74,14 @@ async def on_message(message):
         test = Bot(message.author.id)
         #await say(message.channel, "Je te connais, "+test.name+" !")
         e = interpret(message.content)
+        print(e)
         if e is False:
             await say(message.channel, "Je n'ai rien compris.")
-        else: 
-            await say(message.channel, test.name+", tu m'as dit "+e[1])
+        else:
+            if e[0] == "struct":
+                await say(message.channel, test.name+", tu m'as parlé de "+e[1][3]+" et tu m'as dit "+e[2])
+            else:
+                await say(message.channel, test.name+", tu m'as dit "+e[1][1])
 
 @client.event
 async def on_ready():
