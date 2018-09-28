@@ -3,14 +3,7 @@ import time
 import random
 import sys
 from threading import Thread
-import mysql.connector as sql
-
-# Initialisation BDD
-cnx = sql.connect(user='jambot', password='5sd4f26e654zedjm5**',
-                              host='mysql-jambot.alwaysdata.net',
-                              database='jambot_bdd')
-cursor = cnx.cursor()
-
+from db import DatabaseManager
 
 # Initialisation discord.py
 TOKEN = "NDYzNjk0ODI4NzI3ODI4NTEx.Dh0I-Q.PzRrOSBecr9sSeDZdGHVWly5IlA"  # Get at discordapp.com/developers/applications/me
@@ -38,25 +31,6 @@ class Conversation(Thread):
         self.interlocutor = interlocutor
         self.paused = False
 
-
-class DatabaseManager:
-    # TODO : je te laisse faire Adrien, je crée juste les méthodes dont je me sers !
-    def __init__(self):
-        self.db = ""
-    def getBot(self, id):
-        query = ("SELECT * FROM Bot WHERE discord_id="+id)
-        cursor.execute(query)
-        for truc in cursor:
-            return truc
-    # cas du bot pas dans la base de données
-        return False
-    def insertBot(self, name, discord_id):
-        # ... insertion du bot dans la BDD
-        query = "INSERT INTO Bot(discord_id, name, type) VALUES (%s, %s, 'friend')"
-        cursor.execute(query, (discord_id, name))
-        cnx.commit()
-        print(cursor.rowcount, " record inserted.")
-        return True
 
 # Variables utiles
 db = DatabaseManager()
