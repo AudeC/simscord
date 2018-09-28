@@ -4,6 +4,14 @@ import random
 TOKEN = "NDYzNjk0ODI4NzI3ODI4NTEx.Dh0I-Q.PzRrOSBecr9sSeDZdGHVWly5IlA"  # Get at discordapp.com/developers/applications/me
 TOKEN2 = "NDYzNzEzMzQ1NTE4ODI5NTc4.Djp3TQ.51nIg9NNnhIpCA92bDslt1FI2uc"  # Get at discordapp.com/developers/applications/me
 
+#  def check(msg):
+#            return msg.content.startswith('$name')
+#
+#        message = await client.wait_for_message(author=message.author, check=check)
+
+# discord.on_typing(channel, user, when)
+# Called when someone begins typing a message.
+
 client = discord.Client()
 
 class Friend:
