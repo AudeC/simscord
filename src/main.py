@@ -21,7 +21,16 @@ class Bot:
         self.name = b[2]
         self.id = b[0]
         self.type = b[3]
-        self.age = b[4]
+        self.infos = {}
+        self.infos["age"] = b[4]
+
+    def getInfo(self, field):
+        return self.infos[field]
+
+    def update(self, field, val):
+        if db.updateBot(self.id, field, val) is True:
+            self.infos[field] = val
+            return True
 
 class Conversation(Thread):
 
@@ -45,7 +54,8 @@ async def say(channel, msg):
     await client.send_message(channel, msg)
 
 def interpret(msg):
-    expr = db.findExpr(msg)
+    expr = db.findExpr(msg) # parsing et récupération de l'expression de base
+    # TODO : Analyser les retombées d'une expression
     return expr
 
 @client.event
@@ -53,11 +63,6 @@ async def on_message(message):
     '''
         RECEPTION D'UN MESSAGE
     '''
-    # Le bot ne se répond pas lui-même
-    # TODO : après la phase de test, décommenter
-    #if message.author == client.user:
-    #    return
-
     # Le bot ne se répond pas lui-même
     if message.author == client.user:
         return
@@ -70,16 +75,25 @@ async def on_message(message):
         await say(message.channel, "Enchanté !")
     else:
         # Bot reconnu
-        print(bot)
         test = Bot(message.author.id)
-        #await say(message.channel, "Je te connais, "+test.name+" !")
-        e = interpret(message.content)
+        e = interpret(message.content) # Analyse de l'expression
         print(e)
         if e is False:
             await say(message.channel, "Je n'ai rien compris.")
         else:
             if e[0] == "struct":
                 await say(message.channel, test.name+", tu m'as parlé de "+e[1][3]+" et tu m'as dit "+e[2])
+                if e[1][3].startswith("r_"):
+                    # Si on nous donne une information
+                    info = test.getInfo(e[1][3][2:])
+                    print(info)
+                    if info is None:
+                        # Si on a aucune info, on enregistre
+                        test.update(e[1][3][2:], e[2])
+                    elif info == e[2]:
+                         await say(message.channel, "Je le sais déjà...")
+                    else:
+                        await say(message.channel, "Menteur ! La vraie valeur est "+str(info))
             else:
                 await say(message.channel, test.name+", tu m'as dit "+e[1][1])
 

@@ -26,6 +26,12 @@ class DatabaseManager:
         print(self.cursor.rowcount, " record inserted.")
         return True
 
+    def updateBot(self, id, field, val):
+        query = 'UPDATE Bot SET '+field+'=%s WHERE id=%s'
+        self.cursor.execute(query, (val, str(id)))
+        self.cnx.commit()
+        return True
+
     # Renvoie l'expression de base associée à une expression
     def findBaseExpr(self, exprID):
         query = ('SELECT * FROM Base_expression WHERE id='+str(exprID))
