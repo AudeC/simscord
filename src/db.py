@@ -7,7 +7,7 @@ class DatabaseManager:
         self.cnx = sql.connect(user='jambot', password='5sd4f26e654zedjm5**',
                                       host='mysql-jambot.alwaysdata.net',
                                       database='jambot_bdd')
-        self.cursor = self.cnx.cursor()
+        self.cursor = self.cnx.cursor(buffered=True)
 
     # Récupération d'un bot dans la BDD
     def getBot(self, id):
@@ -31,6 +31,12 @@ class DatabaseManager:
         self.cursor.execute(query, (val, str(id)))
         self.cnx.commit()
         return True
+
+    # retourne toutes les expressions avec un code donné
+    def getAllExpressions(self, code):
+        query = ('SELECT * FROM Base_expression WHERE code="'+code+'"')
+        self.cursor.execute(query)
+        return self.cursor.fetchall()
 
     # Renvoie l'expression de base associée à une expression
     def findBaseExpr(self, exprID):
