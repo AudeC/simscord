@@ -39,6 +39,7 @@ currentChannel = None
 expChannel = discord.Object(id='463696422756155413')
 initiativeCounter = 0
 myself = ""
+waiting_new = ""
 
 
 ## Fonctions de "comportement" = agissement face à une action
@@ -60,16 +61,28 @@ async def answer(code):
             await say(currentChannel, pick("etoi")[1])
 # dire "ok"
 async def acknowledge(code):
-    global currentChannel
     p = pick("ok")[1]
-    await say(currentChannel,p)
+    await say(msg=p)
+
+# retenir une nouvelle expression
+async def understand(explained):
+    if waiting_new == "":
+        # Si on nous explique quelque chose sans qu'on ait demandé
+        pass
+    else:
+        adding_result = db.learnExpression(waiting_new, explained):
+        if adding_result is True:
+            waiting_new = ""
+        else:
+            pass # message d'erreur : on ne peut pas apprendre
 
 behaviours = {
     'bjr': say_same,
+    'bye': say_same,
     'q_age': answer,
     'r_age': acknowledge
+    'q_new': explain
 }
-
 
 # Fonctions utiles
 ## Parle dans un channel
@@ -81,6 +94,12 @@ async def say(channel=expChannel, msg="Test"):
     global initiativeCounter
     initiativeCounter = 0
 
+## Demande une expression
+async def ask(msg):
+    global waiting_new
+    waiting_new = ""
+    await say(msg=pick("q_new")[1])
+
 ## Choisit une expression
 def pick(code):
     # TODO : faire un vrai choix
@@ -89,14 +108,12 @@ def pick(code):
 ## comprend un message
 def interpret(msg):
     expr = db.findExpr(msg) # parsing et récupération de l'expression de base
-    # TODO : Analyser les retombées d'une expression
-    # (implique probablement de déplacer ce qui est actuellement dans
-    # on_message(). )
     return expr
 
 ## remplit une structure
 def fill(str, info):
     return str.replace("%s", info, 1)
+
 
 @client.event
 async def on_message(message):
@@ -133,11 +150,15 @@ async def on_message(message):
     e = interpret(message.content) # Analyse de l'expression
     print(e)
     if e is False:
-        await say(message.channel, "Je n'ai rien compris.")
+        await ask(message.content)
     else:
         code = e[1][3]
         if e[0] == "struct":
-            if code.startswith("r_"):
+            if code == "r_new":
+                await understand(message.content)
+            elif code == "q_new":
+                await explain(message.content)
+            elif code.startswith("r_"):
                 # Si on nous donne une information
                 info = interlocutor.getInfo(code[2:])
                 if info == "None":

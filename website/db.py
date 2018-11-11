@@ -10,12 +10,15 @@ class DatabaseManager:
 
     # Récupération d'un bot dans la BDD
     def getBot(self, id):
-        query = ("SELECT * FROM Bot WHERE discord_id="+id)
+        print("getBot :: "+str(id))
+        query = ('SELECT * FROM Bot WHERE discord_id="'+id+'"')
         self.cursor.execute(query)
-        for truc in self.cursor:
-            return truc
+        res = self.cursor.fetchall()
+        if len(res) == 0:
+            return False
+        return res[0]
         # cas du bot pas dans la base de données
-        return False
+        #return False
 
     # Insertion d'un bot dans la BDD
     def insertBot(self, name, discord_id):
@@ -36,28 +39,39 @@ class DatabaseManager:
         query = ('SELECT * FROM Base_expression WHERE code="'+code+'"')
         self.cursor.execute(query)
         base = self.cursor.fetchall()[0][0]
-        query2 = ('SELECT * FROM Expression WHERE id='+base)
+        print("getAllExpressions :: "+code+" "+str(base))
+
+        query2 = ('SELECT * FROM Expression WHERE base='+str(base))
         self.cursor.execute(query2)
         return self.cursor.fetchall()
 
     # Renvoie l'expression de base associée à une expression
-    def findBaseExpr(self, exprID=0, text=""):
-        if exprID > 0:
-            query = ('SELECT * FROM Base_expression WHERE id='+str(exprID))
+    def findBaseExpr(self, exprID=-1, text=""):
+        exprID = int(exprID)
+        if exprID > -1:
+            query = ('SELECT * FROM Base_expression WHERE id=%s')
+            param = str(exprID)
         elif text != "":
-            query = ('SELECT * FROM Base_expression WHERE `text`="'+text+'"')
+            query = ('SELECT * FROM Base_expression WHERE text=%s')
+            print("param text "+text)
+            param = text.replace('"', '')
         else:
             return False
-        self.cursor.execute(query)
-        return self.cursor.fetchone()
+        self.cursor.execute(query, (param,))
+        r = self.cursor.fetchall()
+        print("findBaseExpr ::")
+        print(r)
+        if len(r) > 0:
+            return r[0]
+        return False
 
     # Recherche d'une expression
     def findExpr(self, msg):
-        query = ('SELECT * FROM Expression WHERE `text`="'+msg+'"')
-        self.cursor.execute(query)
+        query = ('SELECT * FROM Expression WHERE text=%s')
+        self.cursor.execute(query, (msg,))
         # Pour toute expression simple trouvée
         for res in self.cursor:
-            return ('simple', self.findBaseExpr(str(res[2])))
+            return ('simple', self.findBaseExpr(exprID=res[2]))
 
         # Aucune expression simple trouvée, on cherche une structure
         query = ('SELECT * FROM Expression')
@@ -83,4 +97,13 @@ class DatabaseManager:
         # TODO: 1. on cherche si on connaît pas déjà l'expression
 
         # 2. on cherche si on reconnaît l'expression de base
-        base = findBaseExpr(text=exp)
+        base = self.findBaseExpr(text=exp)
+        if base is False:
+            print("ne correspond à aucune base")
+            return False
+        base = base[0]
+        query = "INSERT INTO Expression(text, base) VALUES (%s, %s)"
+        self.cursor.execute(query, (new, base))
+        self.cnx.commit()
+        print(self.cursor.rowcount, " record inserted.")
+        return True
