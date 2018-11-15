@@ -59,8 +59,6 @@ class DatabaseManager:
             return False
         self.cursor.execute(query, (param,))
         r = self.cursor.fetchall()
-        print("findBaseExpr ::")
-        print(r)
         if len(r) > 0:
             return r[0]
         return False
@@ -70,8 +68,10 @@ class DatabaseManager:
         query = ('SELECT * FROM Expression WHERE text=%s')
         self.cursor.execute(query, (msg,))
         # Pour toute expression simple trouvée
-        for res in self.cursor:
-            return ('simple', self.findBaseExpr(exprID=res[2]))
+
+        res = self.cursor.fetchall()
+        if len(res) > 0:
+            return ('simple', self.findBaseExpr(exprID=res[0][2]))
 
         # Aucune expression simple trouvée, on cherche une structure
         query = ('SELECT * FROM Expression')
@@ -79,15 +79,22 @@ class DatabaseManager:
         msplit = msg.split(' ')
         # Pour toute expression
         for res in self.cursor:
+            # TODO : Ne pas se limiter à la première qui match,
+            # toutes les tester et prendre celle où le marqueur est
+            # le plus court
             struct = res[1].split(' ')
             if len(struct) == 1:
                 continue
             # recherche de si la phrase est la bonne
             sub = [item for item in struct if item not in msplit]
-            if len(sub) == 1:
+            if len(sub) == 1 and sub[0].startswith("%"):
                 # recherche du marqueur
                 sub2 = [item for item in msplit if item not in struct]
                 # on retourne tous les infos
+                print("FIND EXPRESSION")
+                print(sub)
+                print(sub2)
+                print(res)
                 return ('struct', self.findBaseExpr(str(res[2])), ' '.join(sub2))
 
         # Pas de structure trouvée, l'expression est inconnue

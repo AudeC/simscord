@@ -39,7 +39,13 @@ class BotClient:
             'bjr': self.say_same,
             'bye': self.say_same,
             'q_age': self.answer,
+            'q_ville': self.answer,
+            'q_couleur':self.answer,
+            'q_emploi': self.answer,
             'r_age': self.acknowledge,
+            'r_ville': self.acknowledge,
+            'r_couleur': self.acknowledge,
+            'r_emploi': self.acknowledge,
             'q_new': self.explain
         }
 
@@ -68,7 +74,7 @@ class BotClient:
             rep = self.fill(p, self.myself.infos[code[2:]])
             print(self.interlocutor)
             if self.interlocutor.getInfo(code[2:]) == "None":
-                return rep + " " + self.pick("etoi")[1]
+                return rep + ". " + self.pick("etoi")[1]
             else:
                 return rep
     # dire "ok"
@@ -112,20 +118,15 @@ class BotClient:
     def fill(self, str, info):
         return str.replace("%s", info, 1)
 
-    # Parle dans un channel
-    #async def say(self, channel=expChannel, msg="Test"):
-    #    # Temps d'écriture implanté "artificiellement"
-    #    await client.send_typing(channel)
-    #    time.sleep(random.choice((1, 2, 3, 4)))
-    #    await client.send_message(channel, msg)
-    #    global initiativeCounter
-    #    initiativeCounter = 0
-
-
     def on_message(self, message):
         '''
             RECEPTION D'UN MESSAGE
         '''
+
+        # PREPROCESSING
+        message.content = message.content.strip()
+        while(message.content[-1:] in ['.', '!', ' ']):
+            message.content = message.content[:-1]
 
         # PHASE DE COMPREHENSION
         e = self.interpret(message.content) # Analyse de l'expression
@@ -166,7 +167,7 @@ class BotClient:
             rep = self.behaviours[code](code)
             return rep
         else:
-            return False
+            return 'Je ne sais pas quoi dire.'
 
 
 #client.loop.create_task(initiativeCheck())

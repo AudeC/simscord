@@ -33,14 +33,24 @@ def index():
 def send_message():
     message = Message(request.form)
     print(message)
+
     # On voit si on reconnaît l'auteur
     a = message.author
     if a.id not in clients:
         clients[a.id] = BotClient(a.id, a.name)
 
+    # TRAITEMENT DU MESSAGE
     rep = clients[a.id].on_message(message)
+
+    # POST-PROCESSING : ajouter éventuellement de la ponctuation
+    rep = rep.strip()
+    print(rep[-1:])
+    if rep[-1:] not in ['!', '.', '?']:
+        rep = rep+'.'
+
+    # Envoi de la réponse
     response_text = { "message":  rep }
-    time.sleep(random.choice((0, 1, 2, 3)))
+    time.sleep(random.choice((0, 1)))
     return jsonify(response_text)
 
 # run Flask app

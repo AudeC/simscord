@@ -14,12 +14,15 @@ class Bot:
         print(b)
         if b is False:
             return False
-            
+
         self.name = b[2]
         self.id = b[0]
         self.type = b[3]
         self.infos = {}
         self.infos["age"] = str(b[4])
+        self.infos["couleur"] = str(b[5])
+        self.infos["emploi"] = str(b[6])
+        self.infos["ville"] = str(b[7])
         return True
 
     def getInfo(self, field):
