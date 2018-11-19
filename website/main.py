@@ -8,28 +8,6 @@ from db import DatabaseManager
 from bot import Bot
 
 
-async def initiativeCheck():
-    # S'il se passe 1min sans qu'on dise quoi que ce soit
-    # on pose une question au hasard
-    await client.wait_until_ready()
-    global currentChannel
-    global interlocutor
-    global initiativeCounter
-    while not client.is_closed:
-        initiativeCounter +=1
-        if initiativeCounter >= 60 and interlocutor != "":
-            for info in interlocutor.infos:
-                if interlocutor.infos[info] is None:
-                    expr = pick("q_"+info)
-                    print(expr)
-                    await say(currentChannel, expr[1])
-                    break
-        await asyncio.sleep(1)
-
-
-initiativeCounter = 0
-
-
 class BotClient:
 
     def __init__(self, interlocutor_id, interlocutor_name):
@@ -49,6 +27,35 @@ class BotClient:
             'q_new': self.explain
         }
 
+        self.initiativeAllowed = ['bjr', 'r_age', 'r_ville', 'r_couleur', 'r_emploi', 'q_new']
+
+        # sentiments (modificatuers d'affects)
+        self.feelings = {
+            'script': self.hate,
+            'misunderstand': self.hate,
+            'lie': self.anger,
+            'repeat': self.anger,
+            'similarity': self.enjoy,
+            'r_new': self.enjoy,
+            'bjr': self.enjoy,
+            'q_age': self.like,
+            'q_ville': self.like,
+            'q_emploi': self.like,
+            'q_new': self.like,
+            'q_couleur':self.like,
+            'r_age':self.enjoy,
+            'r_emploi':self.enjoy,
+            'r_couleur':self.enjoy,
+            'r_ville':self.enjoy
+        }
+
+        self.modificators = {
+            'hate':-0.2,
+            'anger': -0.1,
+            'joy':0.1,
+            'like':0.2
+        }
+
         # Variables utiles
         self.db = DatabaseManager()
         self.myself = Bot(str(463694828727828511))
@@ -61,6 +68,15 @@ class BotClient:
             self.db.insertBot(interlocutor_name, interlocutor_id)
             #bot = self.db.getBot(interlocutor_id)
         self.interlocutor = Bot(interlocutor_id)
+
+    def initiativeCheck(self):
+        # S'il se passe 1min sans qu'on dise quoi que ce soit
+        # on pose une question au hasard
+        print(self.interlocutor.infos)
+        for info in self.interlocutor.infos:
+            if self.interlocutor.infos[info] == 'None':
+                return "q_"+info
+        return False
 
     ## Fonctions de "comportement" = agissement face à une action
     # Renvoyer la même chose (ex: dire bonjour)
@@ -90,8 +106,10 @@ class BotClient:
             adding_result = self.db.learnExpression(self.waiting_new, explained)
             if adding_result is True:
                 self.waiting_new = ""
+                self.feel('understand', explained)
                 return "J'ai compris !"
             else:
+                self.feel('misunderstand', explained)
                 return "Je n'ai pas réussi à apprendre..."
 
 
@@ -118,6 +136,34 @@ class BotClient:
     def fill(self, str, info):
         return str.replace("%s", info, 1)
 
+    # réagit conformément à ses comportements connus
+    def behave(self, code):
+        if code in self.behaviours:
+            rep = self.behaviours[code](code)
+            return rep
+        else:
+            return 'Je ne sais pas quoi dire.'
+
+    def anger(self, code, info):
+        self.interlocutor.changeAffect(self.myself.id, self.modificators['anger'])
+
+    def enjoy(self, code, info):
+        self.interlocutor.changeAffect(self.myself.id,self.modificators['joy'])
+
+    def like(self, code, info):
+        self.interlocutor.changeAffect(self.myself.id,self.modificators['like'])
+
+    def hate(self, code, info):
+        self.interlocutor.changeAffect(self.myself.id, self.modificators['hate'])
+
+    # réagit conformément à son caractère
+    def feel(self, code, info=False):
+        if code in self.feelings:
+            return self.feelings[code](code, info)
+        else:
+            return False
+
+
     def on_message(self, message):
         '''
             RECEPTION D'UN MESSAGE
@@ -135,15 +181,18 @@ class BotClient:
 
         if e is False:
             rep = self.ask(message.content)
+            self.feel('misunderstand')
             return rep
         else:
             code = e[1][3]
             print("code reçu : "+code)
             if e[0] == "struct":
                 if code == "r_new":
+                    self.feel('understand', e)
                     return self.understand(e[2])
                 elif code == "q_new":
-                    self.explain(message.content)
+                    self.feel(code, e)
+                    return self.explain(message.content)
                 elif code.startswith("r_"):
                     # Si on nous donne une information
                     info = self.interlocutor.getInfo(code[2:])
@@ -153,21 +202,28 @@ class BotClient:
                     # TODO: Standardiser avec des "behaviours"
                     elif info == e[2]:
                         # Si on apprend rien
-                        #await say(message.channel, "Je le sais déjà...")
-                        return "Je savais déjà"
+                        self.feel('repeat', e)
+                        return "Je savais déjà."
                     else:
                         # S'il y a contradiction avec ce qu'on savait
-                        #await say(message.channel, "Menteur ! La vraie valeur est "+str(info))
-                        return "Menteur ! La vraie valeur est "+str(info)
-            # réaction au message
-            return self.behave(code)
+                        self.feel('lie', e)
+                        return "Tu aurais dû dire "+str(info)
+            # éventuelle réaction
+            self.feel(code, e)
+            # retour d'une réponse (si pas déjà fait)
+            rep = self.behave(code)
+            if rep[-1:] not in ['!', '.', '?']:
+                rep += '.'
 
-    def behave(self, code):
-        if code in self.behaviours:
-            rep = self.behaviours[code](code)
+            if code in self.initiativeAllowed and random.random() < self.interlocutor.affect:
+                initiative = self.initiativeCheck()
+                if initiative is False:
+                    ini = ''
+                else:
+                    ini = self.pick(initiative)
+                    return rep + ' ' + ini[1]
+
             return rep
-        else:
-            return 'Je ne sais pas quoi dire.'
 
 
 #client.loop.create_task(initiativeCheck())

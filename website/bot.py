@@ -7,6 +7,7 @@ class Bot:
         self.db = DatabaseManager()
         self.infos = {}
         self.defined = self.load()
+        self.affect = 0
 
     def load(self):
         b = self.db.getBot(self.discord_id)
@@ -23,6 +24,10 @@ class Bot:
         self.infos["couleur"] = str(b[5])
         self.infos["emploi"] = str(b[6])
         self.infos["ville"] = str(b[7])
+
+        if self.type != 'self':
+            self.affect = self.db.getBotAffect(self.id, 'bot')
+
         return True
 
     def getInfo(self, field):
@@ -32,3 +37,10 @@ class Bot:
         if self.db.updateBot(self.id, field, val) is True:
             self.infos[field] = str(val)
             return True
+        return False
+
+    def changeAffect(self, source, val):
+        if self.db.changeAffectOfBot(self.id, 'bot', val, source) is True:
+            self.affect += val
+            return self.affect
+        return False

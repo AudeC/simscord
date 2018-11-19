@@ -49,7 +49,7 @@ def send_message():
         rep = rep+'.'
 
     # Envoi de la réponse
-    response_text = { "message":  rep }
+    response_text = { "message":  rep,  "affect": clients[a.id].interlocutor.affect}
     time.sleep(random.choice((0, 1)))
     return jsonify(response_text)
 

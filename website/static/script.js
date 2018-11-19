@@ -22,6 +22,8 @@ const CLIENT_ID = ID();
                  ${data.message}
              </div>
        `)
+       console.log(data)
+       $('#affect_indicator').html(data.affect);
        // remove the loading indicator
        $( "#loading" ).remove();
      }
@@ -70,7 +72,7 @@ $('#begin').on('submit', function(e){
 
 
 function updateScroll(){
-    var element = document.getElementById("#chat_container");
+    var element = document.getElementById("chat_container");
     element.scrollTop = element.scrollHeight;
 }
 

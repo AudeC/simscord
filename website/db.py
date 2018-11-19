@@ -91,10 +91,6 @@ class DatabaseManager:
                 # recherche du marqueur
                 sub2 = [item for item in msplit if item not in struct]
                 # on retourne tous les infos
-                print("FIND EXPRESSION")
-                print(sub)
-                print(sub2)
-                print(res)
                 return ('struct', self.findBaseExpr(str(res[2])), ' '.join(sub2))
 
         # Pas de structure trouvée, l'expression est inconnue
@@ -113,4 +109,56 @@ class DatabaseManager:
         self.cursor.execute(query, (new, base))
         self.cnx.commit()
         print(self.cursor.rowcount, " record inserted.")
+        return True
+
+    # retourne le bot qui correspond à "soi-même"
+    def getSelf(self):
+        query = ('SELECT * FROM Bot WHERE type="self"')
+        self.cursor.execute(query)
+        res = self.cursor.fetchall()
+        if len(res) == 0:
+            return False
+        else:
+            return res[0]
+
+    def getBotAffect(self, target, target_type, source=-1):
+
+        # Identification de la source
+        sourceid = source
+        if sourceid == -1:
+            myself = self.getSelf()
+            if myself is False:
+                return False
+            else:
+                sourceid = myself[0]
+
+        # Récupération de l'arget source->target
+        print("SELECT AFFECT TOWARD "+str(target))
+        query = 'SELECT value FROM Affect WHERE bot=%s AND target_type=%s AND target=%s'
+        self.cursor.execute(query, (sourceid, target_type, target))
+        res = self.cursor.fetchall()
+
+        if len(res) == 0:
+            # target inconnu, on initialise à la valeur donnée
+            print("INSERT AFFECT 0 TO "+str(target))
+            query = 'INSERT INTO Affect(bot, target, target_type, value) VALUES(%s,%s,%s,%s)'
+            self.cursor.execute(query, (sourceid, target, target_type, 0))
+            self.cnx.commit()
+            return 0
+        else:
+            return res[0][0]
+
+    # change l'affect du bot envers target (qui est un target_type)
+    def changeAffectOfBot(self, target, target_type, value, source=-1):
+        # Deux cas : on a déjà un avis sur target, ou on en a pas
+        # ces deux cas sont gérés via getBotAffect
+        # puisque si on connaît pas on crée la relation d'affect, init à 0
+        current_affect = self.getBotAffect(target, target_type, source)
+
+        newaffect = current_affect + value
+        print("UPDATE AFFECT VAL TO "+str(target))
+        query = 'UPDATE Affect SET value=%s WHERE target=%s AND target_type=%s'
+        self.cursor.execute(query, (newaffect, target, target_type))
+        self.cnx.commit()
+
         return True
