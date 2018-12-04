@@ -8,6 +8,8 @@ var ID = function () {
 };
 
 
+console.log("c'est moiiii");
+
 var CLIENT_NAME;
 const CLIENT_ID = ID();
 //const CLIENT_ID = "_waaxpw0gk";
@@ -30,6 +32,7 @@ const CLIENT_ID = ID();
  }
 
 $('#begin').on('submit', function(e){
+  console.log("hi");
   e.preventDefault();
   const name = $('#input_name').val()
   if (!name) {
