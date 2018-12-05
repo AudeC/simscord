@@ -27,7 +27,7 @@ const CLIENT_ID = ID();
        console.log(data)
        $('#affect_indicator').html(data.affect);
        // remove the loading indicator
-       $( "#loading" ).remove();
+       $( "#loading_chat" ).remove();
      }
  }
 
@@ -61,7 +61,7 @@ $('#begin').on('submit', function(e){
 
        // loading
        $('.chat-container').append(`
-           <div class="chat-message text-center col-md-2 offset-md-10 bot-message" id="loading">
+           <div class="chat-message text-center col-md-2 offset-md-10 bot-message" id="loading_chat">
                <b>...</b>
            </div>
        `)
