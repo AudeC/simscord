@@ -30,7 +30,7 @@ def index():
     return render_template('index.html')
 
 @app.route('/chat')
-def index():
+def chat():
     return render_template('index2.html')
 
 
