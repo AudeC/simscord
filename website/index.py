@@ -29,6 +29,11 @@ clients = {}
 def index():
     return render_template('index.html')
 
+@app.route('/chat')
+def index():
+    return render_template('index2.html')
+
+
 @app.route('/send_message', methods=['POST'])
 def send_message():
     message = Message(request.form)
