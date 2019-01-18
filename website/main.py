@@ -56,6 +56,7 @@ class BotClient:
             'like':0.2
         }
 
+
         # Variables utiles
         self.db = DatabaseManager()
         self.myself = Bot(str(463694828727828511))
@@ -163,6 +164,13 @@ class BotClient:
         else:
             return False
 
+    def script(self, code):
+        if(code == "step0"):
+            return "Il s'agit d'une I.A. capable d'interagir plus naturellement avec l'humain en tenant compte de ses émotions et en adaptant les siennes, en apprenant à parler comme lui et en ayant des réactions plus humaines."
+        elif(code == "step1"):
+            return " Il n'y a pas encore de date de sortie annoncée pour le moment. Soyez assuré, cependant, que cela ne devrait pas tarder, la technologie s'améliore de jour en jour ;)"
+        elif(code == "step2"):
+            return "Une telle IA permettra de fournir des services toujours plus pertinents et adaptés à l'utilisateur."
 
     def on_message(self, message):
         '''
@@ -173,6 +181,7 @@ class BotClient:
         message.content = message.content.strip()
         while(message.content[-1:] in ['.', '!', ' ']):
             message.content = message.content[:-1]
+
 
         # PHASE DE COMPREHENSION
         e = self.interpret(message.content) # Analyse de l'expression
@@ -186,6 +195,8 @@ class BotClient:
         else:
             code = e[1][3]
             print("code reçu : "+code)
+            if code[:-1] == "step":
+                return self.script(code)
             if e[0] == "struct":
                 if code == "r_new":
                     self.feel('understand', e)

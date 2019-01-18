@@ -12,20 +12,23 @@
   }
 
   .chat-message {
-    padding: 6px;
+    padding: 10px;
     border-radius: 3px;
     margin-bottom: 3px;
+    display:inline-block;
   }
 
   .bot-message {
       background: #78a578;
       color: white;
+      float:right;
   }
 
   .human-message {
       background: #668fb7;
       color: white;
       margin: 13px 1px;
+      float:left;
   }
 
   .input {
@@ -41,6 +44,10 @@
 
 #chat {
   display:none;
+  position: fixed;
+  top:0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
 }
 
 #infos {
